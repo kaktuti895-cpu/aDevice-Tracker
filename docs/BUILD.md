@@ -60,6 +60,7 @@ Metadata:
 - Label: aDevice Tracker
 - Minimum SDK: 23
 - Target SDK: 35
+- Version: 0.2.0 (versionCode 2)
 - Launcher activity: `com.astuti.adevicetracker.MainActivity`
 
 ## 5. Instalasi opsional melalui ADB
