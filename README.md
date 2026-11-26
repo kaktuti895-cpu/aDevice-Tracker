@@ -17,10 +17,11 @@ Android Controller (native) → Debian backend/ws-scrcpy → perangkat Android m
 Web UI tetap berjalan berdampingan dan tidak digantikan aplikasi native.
 
 ## Dokumentasi
+- [Panduan backend Debian dari nol](docs/DEBIAN-BACKEND-GUIDE.md)
 - [Arsitektur](docs/ARCHITECTURE.md)
 - [Roadmap](docs/ROADMAP.md)
 - [Audit protokol streaming dan input](docs/STREAMING-PROTOCOL.md)
-- [Tutorial build dan instalasi](docs/BUILD.md)
+- [Tutorial build dan instalasi APK](docs/BUILD.md)
 - [Keselamatan operasional](docs/SAFETY.md)
 - [Riwayat pengembangan](docs/CHANGELOG.md)
 
@@ -31,6 +32,7 @@ Web UI tetap berjalan berdampingan dan tidak digantikan aplikasi native.
 | Koneksi backend dan daftar perangkat | Fondasi tersedia |
 | Simpan endpoint terakhir | Ditambahkan |
 | Audit protokol stream dan kontrol | Selesai pada tingkat source |
+| Backend Debian dan Web UI | Berjalan, panduan instalasi tersedia |
 | Streaming layar native | Belum selesai |
 | Kontrol sentuh native | Belum selesai |
 
