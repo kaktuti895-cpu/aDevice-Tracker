@@ -127,6 +127,12 @@ public class StreamActivity extends Activity implements android.view.SurfaceHold
                 if (isInitialInfo(frame)) {
                     parseInitialInfo(frame);
                     socket.sendVideoSettings();
+                    setStatus("Perintah video terkirim · 36 byte");
+                    main.postDelayed(() -> {
+                        if (running.get() && videoMessages == 0) {
+                            setStatus(streamDiagnostics("Belum ada paket video dari server"));
+                        }
+                    }, 2500);
                     setStatus("Metadata diterima · " + videoWidth + "×" + videoHeight + "\nPermintaan video dikirim · menunggu paket H.264…");
                 } else if (isDeviceMessage(frame)) {
                     // Clipboard and file-push responses are not H.264 video packets.
