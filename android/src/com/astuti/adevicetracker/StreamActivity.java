@@ -126,7 +126,8 @@ public class StreamActivity extends Activity implements android.view.SurfaceHold
                 if (frame == null) break;
                 if (isInitialInfo(frame)) {
                     parseInitialInfo(frame);
-                    setStatus("Terhubung · " + (videoWidth > 0 ? videoWidth + "×" + videoHeight : "menyiapkan decoder"));
+                    socket.sendVideoSettings();
+                    setStatus("Metadata diterima · " + videoWidth + "×" + videoHeight + "\nPermintaan video dikirim · menunggu paket H.264…");
                 } else if (isDeviceMessage(frame)) {
                     // Clipboard and file-push responses are not H.264 video packets.
                 } else if (videoWidth > 0 && frame.length > 0) {
@@ -439,6 +440,25 @@ public class StreamActivity extends Activity implements android.view.SurfaceHold
                 message = new ByteArrayOutputStream();
                 message.write(payload);
             }
+        }
+
+        synchronized void sendVideoSettings() throws Exception {
+            // Match ws-scrcpy WebCodecsPlayer defaults: 512 KiB/s, 24 FPS,
+            // 5-second keyframe interval, 480x480 bounds, display 0.
+            ByteBuffer b = ByteBuffer.allocate(36).order(ByteOrder.BIG_ENDIAN);
+            b.put((byte)101);             // TYPE_CHANGE_STREAM_PARAMETERS
+            b.putInt(524288);             // bitrate
+            b.putInt(24);                 // max FPS
+            b.put((byte)5);               // I-frame interval
+            b.putShort((short)480);       // requested width bound
+            b.putShort((short)480);       // requested height bound
+            b.putShort((short)0).putShort((short)0).putShort((short)0).putShort((short)0); // crop
+            b.put((byte)0);               // sendFrameMeta
+            b.put((byte)0xff);            // lockedVideoOrientation = -1
+            b.putInt(0);                  // displayId
+            b.putInt(0);                  // codecOptions length
+            b.putInt(0);                  // encoderName length
+            sendFrame(2, b.array());
         }
 
         synchronized void sendTouch(int action, int x, int y, int width, int height, int pressure) {
