@@ -2,6 +2,7 @@
     <uses-sdk android:minSdkVersion="23" android:targetSdkVersion="35" />
     <uses-permission android:name="android.permission.INTERNET" />
     <application android:icon="@drawable/ic_launcher" android:allowBackup="false" android:label="aDevice Tracker" android:theme="@android:style/Theme.Material.Light.NoActionBar" android:usesCleartextTraffic="true">
+        <activity android:name=".StreamActivity" android:exported="false" android:screenOrientation="unspecified" />
         <activity android:name=".MainActivity" android:exported="true" android:screenOrientation="unspecified">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
