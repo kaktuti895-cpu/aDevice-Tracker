@@ -65,3 +65,9 @@ Koneksi saat ini memakai `ws://` dan tidak memiliki autentikasi pada konfigurasi
 Parser metadata `scrcpy_initial` membaca ukuran dasar dari record `DisplayInfo` (24 byte) dan memakai `ScreenInfo.videoSize` (25 byte) sebagai prioritas ketika tersedia. Sebelumnya parser hanya mengisi dimensi dari `ScreenInfo`; ketika blok tersebut kosong, aplikasi menghasilkan error `ukuran layar tidak valid` walaupun ukuran display tersedia. Parser juga memvalidasi jumlah display, panjang blok metadata, dan batas buffer sebelum membaca data.
 
 APK debug 0.2.1 berhasil dikompilasi dan tanda tangannya diverifikasi. SHA-256: `816c8641568b03be387d511e0b0aaf7dd7f5b0fa23e3d991bd41fe8b859ad712`. Tampilan video dan kontrol sentuh tetap menunggu uji langsung pada ponsel.
+
+## Diagnostik layar hitam (build 0.2.2)
+
+Build 0.2.2 menambahkan log `aDeviceStream` untuk mendeteksi penerimaan SPS/PPS, paket IDR, error decoder, dan jumlah frame hasil decoding. Decoder hanya mengantrekan NAL unit gambar (type 1 dan 5), serta menandai IDR sebagai key frame. Saat frame pertama berhasil didekode, status di layar berubah menjadi `Gambar diterima` dan menampilkan jumlah frame. Gunakan `adb logcat -s aDeviceStream` untuk membaca diagnostik.
+
+APK debug 0.2.2: SHA-256 `8bc3d33a5250ac650cb36b3d0155c742645c81fb40f5ea6fd41ca6c55104864d`. Hasil decode/stream tetap perlu dikonfirmasi pada perangkat fisik.
