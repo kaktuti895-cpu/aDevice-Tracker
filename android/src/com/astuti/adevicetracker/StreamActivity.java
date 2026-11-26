@@ -145,33 +145,69 @@ public class StreamActivity extends Activity implements android.view.SurfaceHold
 
     private void parseInitialInfo(byte[] data) throws Exception {
         ByteBuffer b = ByteBuffer.wrap(data).order(ByteOrder.BIG_ENDIAN);
-        b.position(14 + 64);
+        final int headerLength = 14 + 64;
+        if (data.length < headerLength + 4) throw new Exception("metadata awal terlalu pendek");
+        b.position(headerLength);
         int displays = b.getInt();
+        if (displays < 0 || displays > 32) throw new Exception("jumlah display tidak valid: " + displays);
+
+        videoWidth = 0;
+        videoHeight = 0;
         for (int i = 0; i < displays; i++) {
-            b.getInt(); // display id
-            b.getInt(); b.getInt(); // display width and height
+            if (b.remaining() < 32) throw new Exception("metadata display terpotong");
+            int displayId = b.getInt();
+            int displayWidth = b.getInt();
+            int displayHeight = b.getInt();
             b.getInt(); b.getInt(); b.getInt(); // rotation, layer stack, flags
             b.getInt(); // connection count
             int screenInfoLength = b.getInt();
-            if (screenInfoLength > 0) {
-                int base = b.position();
-                if (screenInfoLength >= 25) {
-                    b.position(base + 16);
-                    videoWidth = b.getInt();
-                    videoHeight = b.getInt();
-                }
-                b.position(base + screenInfoLength);
+
+            if (screenInfoLength < 0 || screenInfoLength > b.remaining()) {
+                throw new Exception("panjang ScreenInfo tidak valid: " + screenInfoLength);
             }
+
+            int candidateWidth = displayWidth;
+            int candidateHeight = displayHeight;
+            if (screenInfoLength >= 25) {
+                int base = b.position();
+                b.position(base + 16);
+                int screenWidth = b.getInt();
+                int screenHeight = b.getInt();
+                if (screenWidth > 0 && screenHeight > 0) {
+                    candidateWidth = screenWidth;
+                    candidateHeight = screenHeight;
+                }
+            }
+            if (candidateWidth > 0 && candidateHeight > 0 &&
+                (videoWidth <= 0 || displayId == 0)) {
+                videoWidth = candidateWidth;
+                videoHeight = candidateHeight;
+            }
+            b.position(b.position() + screenInfoLength);
+
+            if (b.remaining() < 4) throw new Exception("metadata VideoSettings tidak tersedia");
             int videoSettingsLength = b.getInt();
-            if (videoSettingsLength > 0) b.position(b.position() + videoSettingsLength);
+            if (videoSettingsLength < 0 || videoSettingsLength > b.remaining()) {
+                throw new Exception("panjang VideoSettings tidak valid: " + videoSettingsLength);
+            }
+            b.position(b.position() + videoSettingsLength);
         }
+
+        if (b.remaining() < 4) throw new Exception("metadata encoder tidak tersedia");
         int encoders = b.getInt();
+        if (encoders < 0 || encoders > 256) throw new Exception("jumlah encoder tidak valid: " + encoders);
         for (int i = 0; i < encoders; i++) {
+            if (b.remaining() < 4) throw new Exception("metadata encoder terpotong");
             int length = b.getInt();
+            if (length < 0 || length > b.remaining()) throw new Exception("panjang nama encoder tidak valid");
             b.position(b.position() + length);
         }
+        if (b.remaining() < 4) throw new Exception("metadata client ID tidak tersedia");
         b.getInt(); // client id
-        if (videoWidth <= 0 || videoHeight <= 0) throw new Exception("ukuran layar tidak valid");
+
+        if (videoWidth <= 0 || videoHeight <= 0) {
+            throw new Exception("ukuran layar tidak valid (display=" + displays + ")");
+        }
     }
 
     private synchronized void appendH264(byte[] incoming) throws Exception {
