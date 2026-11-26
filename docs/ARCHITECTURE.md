@@ -1,25 +1,62 @@
 # Arsitektur aDevice Tracker
 
-## Sasaran
-aDevice Tracker adalah aplikasi controller Android native untuk mengakses perangkat Android melalui backend Debian yang sudah berjalan. Aplikasi bukan halaman web dan tidak menggunakan WebView sebagai antarmuka utama.
+## Tujuan
+Aplikasi Android native menjadi frontend untuk memantau dan mengendalikan perangkat Android yang terhubung ke Debian. Web UI yang sudah ada tetap menjadi frontend alternatif.
 
-## Komponen
-1. **Controller Android**: konfigurasi server, daftar perangkat, tampilan layar, dan kontrol.
-2. **Debian backend**: layanan ws-scrcpy yang juga melayani Web UI.
-3. **ADB**: transport perangkat Android yang terhubung ke Debian.
-4. **Web UI**: jalur browser yang tetap dipertahankan.
+## Diagram
+```text
+                 LAN
+                  |
+       +----------+-----------+
+       |                      |
+ Android Controller      Browser Client
+ Native aDevice Tracker  Existing Web UI
+       |                      |
+       | WebSocket tracker    | HTTP/WebSocket
+       +-----------+----------+
+                   |
+              Debian Server
+               ws-scrcpy :8000
+                   |
+             Device tracker
+                   |
+        Android devices / ADB
+             scrcpy server :8886
+```
 
-## Jalur komunikasi
-- Discovery: gunakan mekanisme daftar perangkat yang sudah tersedia pada backend.
-- Streaming: ikuti protokol WebSocket/multiplexer ws-scrcpy sesuai versi backend terpasang, termasuk framing biner dan negosiasi sesi.
-- Input: kirim perintah kontrol sesuai protokol backend yang terverifikasi.
+## Android client
+- Package: `com.astuti.adevicetracker`
+- Bahasa: Java.
+- Minimum Android: API 23.
+- Target Android: API 35.
+- Permission jaringan: `android.permission.INTERNET`.
+- UI native Android, tanpa WebView.
+- Endpoint Debian disimpan di SharedPreferences.
+- Tracker memakai WebSocket dan membaca pesan JSON `devicelist` serta `device`.
+- `StreamActivity` memakai `SurfaceView`, WebSocket biner, dan Android `MediaCodec` untuk jalur H.264.
+- Kontrol sentuh memakai struktur biner `TouchControlMessage` scrcpy, bukan JSON.
 
-## Prinsip integrasi
-- Gunakan backend yang ada, bukan membuat server pengganti.
-- Jangan mengubah port atau konfigurasi Web UI.
-- Pisahkan lifecycle daftar perangkat dan sesi streaming.
-- Tangani disconnect, pergantian perangkat, rotasi, dan ukuran layar.
-- Validasi koordinat input terhadap resolusi perangkat.
+## Backend
+- Memakai ws-scrcpy yang sudah terpasang di Debian.
+- Web UI dan tracker: TCP 8000.
+- Endpoint tracker: `/?action=goog-device-list`.
+- Scrcpy server pada perangkat Android: TCP 8886.
+- Aplikasi tidak membuat backend tracker baru dan tidak mengubah konfigurasi layanan.
 
-## Batas saat ini
-Koneksi backend dan daftar perangkat merupakan fondasi awal. Protokol streaming dan kontrol native masih harus diimplementasikan dan diuji terhadap versi ws-scrcpy di server.
+## Jalur streaming
+1. Pengguna memilih perangkat aktif.
+2. Aplikasi mengambil alamat IPv4 interface dari metadata tracker.
+3. Client membuka WebSocket scrcpy ke interface perangkat pada port 8886. Jika interface tidak tersedia, aplikasi memakai jalur proxy ADB melalui host/port Debian.
+4. Metadata awal `scrcpy_initial` dibaca untuk ukuran video.
+5. NAL H.264 Annex-B dipisah; SPS/PPS digunakan untuk menyiapkan decoder MediaCodec.
+6. Video dirender ke SurfaceView.
+7. Tap, swipe, dan move dikirim sebagai pesan `TYPE_TOUCH` biner.
+
+## Status verifikasi
+Source streaming dan touch sudah dibuat serta APK berhasil dikompilasi dan diverifikasi signing-nya. Koneksi stream, decoding gambar bergerak, dan input sentuh belum dinyatakan berhasil sebelum uji pada perangkat Android nyata.
+
+## Browser
+Web UI tetap tersedia pada `http://192.168.2.233:8000/` dan tidak diganti oleh aplikasi native.
+
+## Keamanan
+Koneksi yang diaudit menggunakan `ws://` tanpa autentikasi pada konfigurasi backend saat ini. Gunakan pada jaringan tepercaya. Sebelum akses lintas jaringan atau internet, rancang autentikasi dan TLS. Jangan membuka port ADB atau 8886 ke internet.
