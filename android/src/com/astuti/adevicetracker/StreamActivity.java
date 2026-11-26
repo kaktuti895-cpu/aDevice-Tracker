@@ -118,6 +118,8 @@ public class StreamActivity extends Activity implements android.view.SurfaceHold
                 if (isInitialInfo(frame)) {
                     parseInitialInfo(frame);
                     setStatus("Terhubung · " + (videoWidth > 0 ? videoWidth + "×" + videoHeight : "menyiapkan decoder"));
+                } else if (isDeviceMessage(frame)) {
+                    // Clipboard and file-push responses are not H.264 video packets.
                 } else if (videoWidth > 0 && frame.length > 0) {
                     appendH264(frame);
                 }
@@ -133,6 +135,11 @@ public class StreamActivity extends Activity implements android.view.SurfaceHold
 
     private static boolean isInitialInfo(byte[] data) {
         byte[] magic = "scrcpy_initial".getBytes(StandardCharsets.UTF_8);
+        return data.length >= magic.length && Arrays.equals(magic, Arrays.copyOf(data, magic.length));
+    }
+
+    private static boolean isDeviceMessage(byte[] data) {
+        byte[] magic = "scrcpy_message".getBytes(StandardCharsets.UTF_8);
         return data.length >= magic.length && Arrays.equals(magic, Arrays.copyOf(data, magic.length));
     }
 
