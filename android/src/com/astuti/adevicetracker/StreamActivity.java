@@ -100,8 +100,17 @@ public class StreamActivity extends Activity implements android.view.SurfaceHold
 
     private void runStream(String url) {
         try {
-            socket = new StreamSocket(url);
-            socket.connect();
+            try {
+                socket = new StreamSocket(url);
+                socket.connect();
+            } catch (Exception directError) {
+                String fallback = getIntent().getStringExtra("fallback_ws_url");
+                if (fallback == null || fallback.isEmpty() || fallback.equals(url) || !running.get()) throw directError;
+                setStatus("Koneksi langsung gagal. Mencoba jalur proxy Debian…");
+                if (socket != null) socket.close();
+                socket = new StreamSocket(fallback);
+                socket.connect();
+            }
             setStatus("Stream tersambung. Menunggu metadata video…");
             while (running.get()) {
                 byte[] frame = socket.readFrame();
@@ -240,8 +249,11 @@ public class StreamActivity extends Activity implements android.view.SurfaceHold
                 float left = (vw - shownW) / 2f, top = (vh - shownH) / 2f;
                 float x = (event.getX() - left) / scale;
                 float y = (event.getY() - top) / scale;
-                if (x >= 0 && y >= 0 && x <= videoWidth && y <= videoHeight) {
-                    socket.sendTouch(mapped, Math.round(x), Math.round(y), videoWidth, videoHeight,
+                boolean inside = x >= 0 && y >= 0 && x <= videoWidth && y <= videoHeight;
+                if (inside || mapped == 1) {
+                    int px = Math.max(0, Math.min(videoWidth, Math.round(x)));
+                    int py = Math.max(0, Math.min(videoHeight, Math.round(y)));
+                    socket.sendTouch(mapped, px, py, videoWidth, videoHeight,
                         mapped == 1 ? 0 : Math.max(1, Math.round(event.getPressure() * 65535f)));
                 }
                 return true;
