@@ -7,7 +7,7 @@ Aplikasi menambahkan `StreamActivity`, sebuah Activity Android native yang memak
 Alur saat ini:
 
 1. Kartu perangkat aktif menampilkan tombol **Lihat layar & kontrol**.
-2. Aplikasi memilih interface IPv4 perangkat dari metadata tracker. Jika tidak tersedia, aplikasi membentuk URL proxy ADB ke endpoint Debian yang sudah dikonfigurasi.
+2. Aplikasi memprioritaskan interface Wi-Fi perangkat (sesuai `wifi.interface`), lalu interface jaringan lain yang layak. Jika koneksi langsung gagal, aplikasi mencoba URL proxy ADB ke endpoint Debian yang sudah dikonfigurasi.
 3. Client membuka WebSocket ke endpoint scrcpy pada port 8886.
 4. Paket metadata `scrcpy_initial` dibaca untuk mendapatkan ukuran video.
 5. NAL unit H.264 Annex-B dipisahkan. SPS/PPS dipakai untuk mengonfigurasi Android `MediaCodec`.
