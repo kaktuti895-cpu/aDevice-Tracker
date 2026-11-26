@@ -66,8 +66,11 @@ Parser metadata `scrcpy_initial` membaca ukuran dasar dari record `DisplayInfo` 
 
 APK debug 0.2.1 berhasil dikompilasi dan tanda tangannya diverifikasi. SHA-256: `816c8641568b03be387d511e0b0aaf7dd7f5b0fa23e3d991bd41fe8b859ad712`. Tampilan video dan kontrol sentuh tetap menunggu uji langsung pada ponsel.
 
-## Diagnostik layar hitam (build 0.2.2)
+## Perbaikan diagnostik WebSocket (build 0.2.3)
 
-Build 0.2.2 menambahkan log `aDeviceStream` untuk mendeteksi penerimaan SPS/PPS, paket IDR, error decoder, dan jumlah frame hasil decoding. Decoder hanya mengantrekan NAL unit gambar (type 1 dan 5), serta menandai IDR sebagai key frame. Saat frame pertama berhasil didekode, status di layar berubah menjadi `Gambar diterima` dan menampilkan jumlah frame. Gunakan `adb logcat -s aDeviceStream` untuk membaca diagnostik.
+Build 0.2.3 memperbaiki pembacaan frame WebSocket pada client native. Sebelumnya pembaca hanya menerima opcode binary tunggal dan mengabaikan continuation frame. Sekarang pesan yang terfragmentasi disatukan sampai bit FIN, ping dijawab dengan pong, pong diabaikan, dan close mengakhiri pembacaan. Batas ukuran pesan terfragmentasi adalah 16 MiB.
 
-APK debug 0.2.2: SHA-256 `8bc3d33a5250ac650cb36b3d0155c742645c81fb40f5ea6fd41ca6c55104864d`. Hasil decode/stream tetap perlu dikonfirmasi pada perangkat fisik.
+Overlay status kini menampilkan jumlah byte/pesan video yang diterima serta hitungan SPS, PPS, IDR, frame hasil decode, dan paket yang dilewati. Angka ini dipakai untuk memisahkan masalah koneksi WebSocket, parsing H.264, dan decoder. APK berhasil dikompilasi dan tanda tangannya diverifikasi; hasil gambar dan kontrol sentuh tetap harus diuji pada HP controller.
+
+- Versi: 0.2.3 (versionCode 5)
+- SHA-256: `8f1146c825fcbeaaca585eb83f3e2414282e09da3f4ed2d18c055b4892be8a96`
