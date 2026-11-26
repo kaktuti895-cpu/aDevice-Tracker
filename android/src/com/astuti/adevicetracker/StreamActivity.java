@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.content.Intent;
+import android.widget.ScrollView;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -100,19 +102,31 @@ public class StreamActivity extends Activity implements android.view.SurfaceHold
             TextView reportView = new TextView(this);
             reportView.setText(report);
             reportView.setTextIsSelectable(true);
+            reportView.setFocusable(true);
+            reportView.setFocusableInTouchMode(true);
             reportView.setTextSize(13);
-            reportView.setPadding(32, 24, 32, 24);
+            reportView.setTextColor(Color.WHITE);
+            reportView.setPadding(28, 24, 28, 24);
+            ScrollView reportScroll = new ScrollView(this);
+            reportScroll.setFillViewport(true);
+            reportScroll.addView(reportView);
             new AlertDialog.Builder(this)
                 .setTitle("Diagnosa aDevice Tracker")
-                .setMessage("Jika salin otomatis gagal, tekan lama teks laporan lalu pilih Salin.")
-                .setView(reportView)
-                .setPositiveButton("Salin", (dialog, which) -> {
+                .setView(reportScroll)
+                .setPositiveButton("Bagikan", (dialog, which) -> {
+                    Intent share = new Intent(Intent.ACTION_SEND);
+                    share.setType("text/plain");
+                    share.putExtra(Intent.EXTRA_SUBJECT, "Diagnosa aDevice Tracker");
+                    share.putExtra(Intent.EXTRA_TEXT, report);
+                    startActivity(Intent.createChooser(share, "Kirim diagnosa"));
+                })
+                .setNeutralButton("Salin", (dialog, which) -> {
                     try {
                         ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
                         clipboard.setPrimaryClip(ClipData.newPlainText("aDevice Tracker diagnostics", report));
-                        Toast.makeText(this, "Laporan disalin. Tempelkan di ChatGPT.", Toast.LENGTH_LONG).show();
+                        Toast.makeText(this, "Laporan disalin.", Toast.LENGTH_LONG).show();
                     } catch (Exception e) {
-                        Toast.makeText(this, "Salin otomatis gagal. Tekan lama teks laporan.", Toast.LENGTH_LONG).show();
+                        Toast.makeText(this, "Clipboard gagal: " + e.getClass().getSimpleName(), Toast.LENGTH_LONG).show();
                     }
                 })
                 .setNegativeButton("Tutup", null)
