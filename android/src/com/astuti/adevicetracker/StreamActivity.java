@@ -168,9 +168,9 @@ public class StreamActivity extends Activity implements android.view.SurfaceHold
 
             int candidateWidth = displayWidth;
             int candidateHeight = displayHeight;
+            int screenInfoBase = b.position();
             if (screenInfoLength >= 25) {
-                int base = b.position();
-                b.position(base + 16);
+                b.position(screenInfoBase + 16);
                 int screenWidth = b.getInt();
                 int screenHeight = b.getInt();
                 if (screenWidth > 0 && screenHeight > 0) {
@@ -183,7 +183,9 @@ public class StreamActivity extends Activity implements android.view.SurfaceHold
                 videoWidth = candidateWidth;
                 videoHeight = candidateHeight;
             }
-            b.position(b.position() + screenInfoLength);
+            // Advance from the beginning of the optional ScreenInfo block,
+            // not from the temporary position used to read width and height.
+            b.position(screenInfoBase + screenInfoLength);
 
             if (b.remaining() < 4) throw new Exception("metadata VideoSettings tidak tersedia");
             int videoSettingsLength = b.getInt();
