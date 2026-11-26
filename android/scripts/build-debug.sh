@@ -17,7 +17,7 @@ rm -rf "$OUT/generated" "$OUT/classes" "$OUT/dex"
 mkdir -p "$OUT/generated" "$OUT/classes" "$OUT/dex"
 rm -f "$OUT/resources/compiled.zip" "$OUT/apk/"*.apk
 "$BT/aapt2" compile --dir "$ROOT/res" -o "$OUT/resources/compiled.zip"
-"$BT/aapt2" link -I "$JAR" --manifest "$ROOT/AndroidManifest.xml" --java "$OUT/generated" --min-sdk-version 23 --target-sdk-version 35 --version-code 7 --version-name 0.2.5 -R "$OUT/resources/compiled.zip" -o "$OUT/apk/app-unsigned.apk"
+"$BT/aapt2" link -I "$JAR" --manifest "$ROOT/AndroidManifest.xml" --java "$OUT/generated" --min-sdk-version 23 --target-sdk-version 35 --version-code 8 --version-name 0.2.6 -R "$OUT/resources/compiled.zip" -o "$OUT/apk/app-unsigned.apk"
 javac -source 8 -target 8 -classpath "$JAR" -d "$OUT/classes" $(find "$ROOT/src" -name '*.java' -print)
 "$BT/d8" --min-api 23 --lib "$JAR" --output "$OUT/dex" $(find "$OUT/classes" -name "*.class" -print)
 cp "$OUT/apk/app-unsigned.apk" "$OUT/apk/app-unsigned-with-dex.apk"
