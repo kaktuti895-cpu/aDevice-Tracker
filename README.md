@@ -19,6 +19,7 @@ Web UI tetap berjalan berdampingan dan tidak digantikan aplikasi native.
 ## Dokumentasi
 - [Arsitektur](docs/ARCHITECTURE.md)
 - [Roadmap](docs/ROADMAP.md)
+- [Audit protokol streaming dan input](docs/STREAMING-PROTOCOL.md)
 - [Tutorial build dan instalasi](docs/BUILD.md)
 - [Keselamatan operasional](docs/SAFETY.md)
 - [Riwayat pengembangan](docs/CHANGELOG.md)
@@ -29,6 +30,7 @@ Web UI tetap berjalan berdampingan dan tidak digantikan aplikasi native.
 | Aplikasi native dan launcher | Fondasi tersedia |
 | Koneksi backend dan daftar perangkat | Fondasi tersedia |
 | Simpan endpoint terakhir | Ditambahkan |
+| Audit protokol stream dan kontrol | Selesai pada tingkat source |
 | Streaming layar native | Belum selesai |
 | Kontrol sentuh native | Belum selesai |
 
