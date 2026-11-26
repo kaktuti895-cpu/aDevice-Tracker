@@ -8,13 +8,14 @@
 - [ ] Penanganan reconnect dan error state lengkap.
 
 ## Tahap 2: Streaming layar
-- [ ] Audit protokol ws-scrcpy sesuai versi backend.
+- [x] Audit protokol tracker dan jalur stream ws-scrcpy dari source backend.
 - [ ] Implementasi handshake dan sesi streaming native.
 - [ ] Decode video dan render ke SurfaceView/TextureView.
 - [ ] Rotasi, resize, lifecycle, dan pemulihan koneksi.
 - [ ] Uji pada perangkat target nyata.
 
 ## Tahap 3: Kontrol sentuh
+- [x] Audit struktur pesan kontrol biner upstream.
 - [ ] Pemetaan koordinat view ke resolusi perangkat.
 - [ ] Tap, long-press, swipe, dan multi-touch jika didukung protokol.
 - [ ] Tombol navigasi dan input teks sesuai kemampuan backend.
@@ -31,4 +32,11 @@
 - [x] Roadmap.
 - [x] Tutorial build dan instalasi.
 - [x] Aturan keselamatan.
+- [x] Audit protokol streaming dan input (STREAMING-PROTOCOL.md).
 - [ ] Sinkronisasi source aplikasi lengkap dan riwayat commit.
+
+## Validasi build
+- Debug APK berhasil dibangun dan diverifikasi secara lokal.
+- Versi aplikasi: 0.1.0.
+- Package: com.astuti.adevicetracker.
+- Streaming dan input native belum diimplementasikan atau diuji end-to-end.
