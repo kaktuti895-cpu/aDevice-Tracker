@@ -1,40 +1,29 @@
 # aDevice Tracker
 
-Aplikasi Android native untuk mengakses perangkat Android melalui backend Debian/ws-scrcpy yang sudah ada.
+Native Android controller for Android devices connected to the existing Debian `ws-scrcpy` backend. The Android app is Java/native and does not use WebView. The existing browser UI remains available.
 
-**Status:** fondasi awal tersedia; streaming layar native dan kontrol sentuh masih dalam pengembangan.
+## Current status
+- Native tracker connection and device list: implemented.
+- Native screen streaming: initial `SurfaceView` + `MediaCodec` implementation; real-device playback validation pending.
+- Native touch control: initial scrcpy binary-protocol implementation; real-device input validation pending.
+- Debian backend tutorial: documented from a clean Debian setup through service verification.
 
-## Tujuan
-- Controller Android native, bukan WebView.
-- Menggunakan backend Debian yang sudah berjalan.
-- Menampilkan dan memilih perangkat Android.
-- Mengembangkan streaming layar dan kontrol sentuh.
-- Mempertahankan Web UI browser sebagai jalur akses alternatif.
+A successful APK build/signature check does **not** prove that live video and remote touch work on a physical device. Those remain explicit acceptance tests.
 
-## Arsitektur
-Android Controller (native) → Debian backend/ws-scrcpy → perangkat Android melalui ADB.
-
-Web UI tetap berjalan berdampingan dan tidak digantikan aplikasi native.
-
-## Dokumentasi
-- [Panduan backend Debian dari nol](docs/DEBIAN-BACKEND-GUIDE.md)
-- [Arsitektur](docs/ARCHITECTURE.md)
+## Documentation
+- [Architecture](docs/ARCHITECTURE.md)
 - [Roadmap](docs/ROADMAP.md)
-- [Audit protokol streaming dan input](docs/STREAMING-PROTOCOL.md)
-- [Tutorial build dan instalasi APK](docs/BUILD.md)
-- [Keselamatan operasional](docs/SAFETY.md)
-- [Riwayat pengembangan](docs/CHANGELOG.md)
+- [Android build and installation](docs/BUILD.md)
+- [Native streaming and touch protocol](docs/NATIVE-STREAMING.md)
+- [Debian backend installation tutorial](docs/DEBIAN-BACKEND-GUIDE.md)
+- [Safety boundaries](docs/SAFETY.md)
+- [Streaming protocol audit](docs/STREAMING-PROTOCOL.md)
+- [Development changelog](docs/CHANGELOG.md)
 
-## Status fitur
-| Fitur | Status |
-|---|---|
-| Aplikasi native dan launcher | Fondasi tersedia |
-| Koneksi backend dan daftar perangkat | Fondasi tersedia |
-| Simpan endpoint terakhir | Ditambahkan |
-| Audit protokol stream dan kontrol | Selesai pada tingkat source |
-| Backend Debian dan Web UI | Berjalan, panduan instalasi tersedia |
-| Streaming layar native | Belum selesai |
-| Kontrol sentuh native | Belum selesai |
+## Source
+Android Java source and build script are in [`android/`](android/).
 
-## Layanan yang wajib dipertahankan
-Web UI port 8000, ws-scrcpy, ADB, scrcpy, port-forward 8001/8002, dan koneksi LAN. Jangan mengubah atau menghentikan layanan tersebut saat mengembangkan aplikasi tanpa persetujuan dan rencana uji terpisah.
+## Operational boundaries
+The existing Debian Web UI remains on port 8000. The Android client must not stop or reconfigure ws-scrcpy, ADB, scrcpy, existing port forwards, or LAN access as part of normal app development. No device secrets, private ADB keys, debug keystores, or credentials belong in this public repository.
+
+Repository is intentionally public as requested.
