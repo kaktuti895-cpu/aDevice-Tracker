@@ -11,6 +11,8 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.content.SharedPreferences;
 import android.widget.Button;
 import android.widget.EditText;
@@ -135,8 +137,32 @@ public class MainActivity extends Activity {
             TextView serial=text(udid,11,Color.rgb(139,158,183),false); serial.setPadding(0,dp(8),0,dp(3)); card.addView(serial);
             TextView detail=text("Android "+android+"  ·  SDK "+sdk+"  ·  Server PID "+pid,12,Color.rgb(190,204,222),false); card.addView(detail);
             JSONArray interfaces=d.optJSONArray("interfaces"); if(interfaces!=null && interfaces.length()>0){ StringBuilder b=new StringBuilder("Interface: "); for(int i=0;i<interfaces.length();i++){ if(i>0)b.append(", "); JSONObject n=interfaces.optJSONObject(i); b.append(n==null?interfaces.optString(i):n.optString("name",n.toString())); } TextView net=text(b.toString(),11,Color.rgb(139,158,183),false); net.setPadding(0,dp(6),0,0); card.addView(net); }
+            if(active){ Button streamButton=new Button(this); streamButton.setText("Lihat layar & kontrol"); streamButton.setAllCaps(false); streamButton.setTextColor(Color.WHITE); streamButton.setBackground(bg(Color.rgb(36,111,214),10)); LinearLayout.LayoutParams streamParams=new LinearLayout.LayoutParams(-1,dp(44)); streamParams.topMargin=dp(12); card.addView(streamButton,streamParams); streamButton.setOnClickListener(v -> openStream(d)); }
         }
     }
+    private void openStream(JSONObject device) {
+        String udid=device.optString("udid","");
+        if(udid.isEmpty()){ Toast.makeText(this,"Serial perangkat tidak tersedia",Toast.LENGTH_SHORT).show(); return; }
+        String address="";
+        JSONArray interfaces=device.optJSONArray("interfaces");
+        if(interfaces!=null){ for(int i=0;i<interfaces.length();i++){ JSONObject item=interfaces.optJSONObject(i); if(item!=null){ String ip=item.optString("ipv4","").trim(); if(!ip.isEmpty() && !"0.0.0.0".equals(ip)){ address=ip; break; } } } }
+        Uri.Builder builder;
+        if(!address.isEmpty()) {
+            builder=new Uri.Builder().scheme("ws").encodedAuthority(address+":8886").path("/");
+        } else {
+            String host=hostInput.getText().toString().trim(); String port=portInput.getText().toString().trim();
+            if(host.isEmpty() || port.isEmpty()){ Toast.makeText(this,"Alamat server belum diisi",Toast.LENGTH_SHORT).show(); return; }
+            builder=new Uri.Builder().scheme("ws").encodedAuthority(host+":"+port).path("/")
+                .appendQueryParameter("action","proxy-adb")
+                .appendQueryParameter("remote","tcp:8886");
+        }
+        builder.appendQueryParameter("udid",udid);
+        Intent intent=new Intent(this,StreamActivity.class);
+        intent.putExtra("udid",udid);
+        intent.putExtra("ws_url",builder.build().toString());
+        startActivity(intent);
+    }
+
     @Override protected void onDestroy(){ closeTracker(); io.shutdownNow(); super.onDestroy(); }
 
     private final class TrackerSocket {
