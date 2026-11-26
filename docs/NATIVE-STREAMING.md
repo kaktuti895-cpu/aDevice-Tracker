@@ -60,8 +60,8 @@ Backend yang diaudit memakai ws-scrcpy `1.19-ws8`, server Web UI pada port 8000,
 
 Koneksi saat ini memakai `ws://` dan tidak memiliki autentikasi pada konfigurasi backend yang diaudit. Gunakan hanya pada LAN tepercaya. Jangan membuka port 8886 atau ADB ke internet.
 
-## Perbaikan parser metadata Xiaomi (build 26 November 2026)
+## Perbaikan parser metadata Xiaomi (build 0.2.1)
 
-Parser metadata `scrcpy_initial` sekarang membaca ukuran dasar dari record `DisplayInfo` (24 byte) dan memakai ukuran `ScreenInfo.videoSize` (25 byte) sebagai prioritas ketika tersedia. Sebelumnya parser hanya mengisi dimensi dari `ScreenInfo`; ketika blok tersebut kosong, aplikasi menghasilkan error `ukuran layar tidak valid` walaupun ukuran display tersedia. Parser baru juga memeriksa jumlah display, panjang blok, dan batas buffer sebelum membaca data.
+Parser metadata `scrcpy_initial` membaca ukuran dasar dari record `DisplayInfo` (24 byte) dan memakai `ScreenInfo.videoSize` (25 byte) sebagai prioritas ketika tersedia. Sebelumnya parser hanya mengisi dimensi dari `ScreenInfo`; ketika blok tersebut kosong, aplikasi menghasilkan error `ukuran layar tidak valid` walaupun ukuran display tersedia. Parser juga memvalidasi jumlah display, panjang blok metadata, dan batas buffer sebelum membaca data.
 
-APK hasil build perbaikan: `aDevice-Tracker-debug.apk`, SHA-256 `05f23e888a5304fc1cd905d60c0a6a0ec26cf68ac5f95342c58af574ed384284`. Perbaikan parser sudah dikompilasi dan ditandatangani; tampilan video dan kontrol sentuh tetap menunggu uji langsung pada ponsel.
+APK debug 0.2.1 berhasil dikompilasi dan tanda tangannya diverifikasi. SHA-256: `816c8641568b03be387d511e0b0aaf7dd7f5b0fa23e3d991bd41fe8b859ad712`. Tampilan video dan kontrol sentuh tetap menunggu uji langsung pada ponsel.
