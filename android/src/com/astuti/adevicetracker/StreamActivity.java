@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.graphics.SurfaceTexture;
 import android.media.MediaCodec;
 import android.media.MediaFormat;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.Surface;
@@ -50,6 +51,9 @@ public class StreamActivity extends Activity implements android.view.SurfaceHold
     private byte[] sps;
     private byte[] pps;
     private byte[] pending = new byte[0];
+    private long videoPackets = 0;
+    private long decodedFrames = 0;
+    private long droppedPackets = 0;
     private String udid = "";
 
     @Override protected void onCreate(Bundle state) {
@@ -241,10 +245,14 @@ public class StreamActivity extends Activity implements android.view.SurfaceHold
         int prefix = startCodeLength(nalu, 0);
         if (prefix == 0 || nalu.length <= prefix) return;
         int type = nalu[prefix] & 0x1f;
-        if (type == 7) { sps = nalu; configureDecoderIfReady(); return; }
-        if (type == 8) { pps = nalu; configureDecoderIfReady(); return; }
-        if (decoder == null) return;
-        decodeNalu(nalu);
+        if (type == 7) { sps = nalu; Log.i("aDeviceStream", "SPS received bytes=" + nalu.length); configureDecoderIfReady(); return; }
+        if (type == 8) { pps = nalu; Log.i("aDeviceStream", "PPS received bytes=" + nalu.length); configureDecoderIfReady(); return; }
+        // MediaCodec consumes coded picture data, not standalone SEI/AUD/filler NAL units.
+        if (type != 1 && type != 5) return;
+        if (decoder == null) { droppedPackets++; return; }
+        videoPackets++;
+        if (type == 5) Log.i("aDeviceStream", "IDR received bytes=" + nalu.length);
+        decodeNalu(nalu, type == 5);
     }
 
     private void configureDecoderIfReady() throws Exception {
@@ -259,7 +267,7 @@ public class StreamActivity extends Activity implements android.view.SurfaceHold
         setStatus("Decoder aktif · " + videoWidth + "×" + videoHeight + " · sentuh layar untuk kontrol");
     }
 
-    private void decodeNalu(byte[] nalu) {
+    private void decodeNalu(byte[] nalu, boolean keyFrame) {
         try {
             int input = decoder.dequeueInputBuffer(10000);
             if (input >= 0) {
@@ -267,7 +275,8 @@ public class StreamActivity extends Activity implements android.view.SurfaceHold
                 if (buffer != null && buffer.capacity() >= nalu.length) {
                     buffer.clear();
                     buffer.put(nalu);
-                    decoder.queueInputBuffer(input, 0, nalu.length, presentationTimeUs, 0);
+                    decoder.queueInputBuffer(input, 0, nalu.length, presentationTimeUs,
+                        keyFrame ? MediaCodec.BUFFER_FLAG_KEY_FRAME : 0);
                     presentationTimeUs += 33333;
                 } else decoder.queueInputBuffer(input, 0, 0, presentationTimeUs, 0);
             }
@@ -275,8 +284,14 @@ public class StreamActivity extends Activity implements android.view.SurfaceHold
             int output;
             while ((output = decoder.dequeueOutputBuffer(info, 0)) >= 0) {
                 decoder.releaseOutputBuffer(output, true);
+                decodedFrames++;
+                if (decodedFrames == 1 || decodedFrames % 60 == 0) {
+                    Log.i("aDeviceStream", "decodedFrames=" + decodedFrames + " videoPackets=" + videoPackets);
+                    setStatus("Gambar diterima · " + videoWidth + "×" + videoHeight + " · " + decodedFrames + " frame");
+                }
             }
         } catch (Exception e) {
+            Log.e("aDeviceStream", "decode error", e);
             setStatus("Decoder: " + e.getMessage());
         }
     }
