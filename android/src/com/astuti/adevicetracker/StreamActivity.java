@@ -1,6 +1,8 @@
 package com.astuti.adevicetracker;
 
 import android.app.Activity;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -78,6 +80,26 @@ public class StreamActivity extends Activity implements android.view.SurfaceHold
         status.setBackgroundColor(0x99000000);
         FrameLayout.LayoutParams statusParams = new FrameLayout.LayoutParams(-1, -2, Gravity.TOP);
         root.addView(status, statusParams);
+        TextView copyDiagnostics = new TextView(this);
+        copyDiagnostics.setText("Salin diagnosa");
+        copyDiagnostics.setTextColor(Color.WHITE);
+        copyDiagnostics.setTextSize(13);
+        copyDiagnostics.setGravity(Gravity.CENTER);
+        copyDiagnostics.setPadding(16, 12, 16, 12);
+        copyDiagnostics.setBackgroundColor(0xff245fa8);
+        FrameLayout.LayoutParams copyParams = new FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM | Gravity.END);
+        copyParams.setMargins(12, 12, 16, 24);
+        root.addView(copyDiagnostics, copyParams);
+        copyDiagnostics.setOnClickListener(v -> {
+            String report = "aDevice Tracker native diagnostics\\n" +
+                "Device: " + udid + "\\n" +
+                "Last status: " + (status == null ? "-" : status.getText().toString()) + "\\n" +
+                streamDiagnostics("Snapshot") + "\\n" +
+                "WebSocket: " + (socket == null ? "not-created" : socket.getDiagnostics());
+            ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+            clipboard.setPrimaryClip(ClipData.newPlainText("aDevice Tracker diagnostics", report));
+            Toast.makeText(this, "Diagnosa disalin. Tempelkan teksnya di ChatGPT.", Toast.LENGTH_LONG).show();
+        });
         setContentView(root);
         udid = getIntent().getStringExtra("udid");
         setStatus("Menghubungkan ke perangkat…");
@@ -492,6 +514,9 @@ public class StreamActivity extends Activity implements android.view.SurfaceHold
 
         private int readByte() throws Exception { int v=in.read(); if(v<0) throw new Exception("frame terpotong"); return v; }
         private byte[] readBytes(int n) throws Exception { byte[] b=new byte[n]; int o=0; while(o<n){int r=in.read(b,o,n-o);if(r<0)throw new Exception("frame terpotong");o+=r;} return b; }
+        String getDiagnostics() {
+            return "url=" + uri + ", connected=" + (socket != null && socket.isConnected() && !socket.isClosed());
+        }
         void close() { try { if (socket != null) socket.close(); } catch (Exception ignored) { } }
     }
 }
