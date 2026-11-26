@@ -30,6 +30,16 @@ Pesan mengikuti urutan wire format yang diaudit dari `TouchControlMessage.toBuff
 
 Action memakai nilai Android MotionEvent: down=0, up=1, move=2. Koordinat dipetakan dari area tampilan ke ukuran video, dengan kompensasi letterbox.
 
+## Uji manual pada ponsel controller
+
+1. Pasang APK debug versi 0.2.0.
+2. Buka aplikasi dan hubungkan ke IP Debian pada port 8000.
+3. Pastikan perangkat target muncul dengan status ONLINE.
+4. Tekan **Lihat layar & kontrol** pada perangkat target.
+5. Pastikan layar target tampil dan bergerak.
+6. Uji tap dan swipe sederhana, lalu lepaskan sentuhan di area mana pun.
+7. Jika gagal, catat teks status yang tampil. Jangan restart ws-scrcpy atau mengubah port-forward sebagai langkah pertama.
+
 ## Batas dan status verifikasi
 
 - [x] Source Activity native dibuat.
