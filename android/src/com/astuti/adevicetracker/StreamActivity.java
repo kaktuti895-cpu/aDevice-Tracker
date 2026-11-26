@@ -1,6 +1,7 @@
 package com.astuti.adevicetracker;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.os.Bundle;
@@ -96,9 +97,26 @@ public class StreamActivity extends Activity implements android.view.SurfaceHold
                 "Last status: " + (status == null ? "-" : status.getText().toString()) + "\\n" +
                 streamDiagnostics("Snapshot") + "\\n" +
                 "WebSocket: " + (socket == null ? "not-created" : socket.getDiagnostics());
-            ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-            clipboard.setPrimaryClip(ClipData.newPlainText("aDevice Tracker diagnostics", report));
-            Toast.makeText(this, "Diagnosa disalin. Tempelkan teksnya di ChatGPT.", Toast.LENGTH_LONG).show();
+            TextView reportView = new TextView(this);
+            reportView.setText(report);
+            reportView.setTextIsSelectable(true);
+            reportView.setTextSize(13);
+            reportView.setPadding(32, 24, 32, 24);
+            new AlertDialog.Builder(this)
+                .setTitle("Diagnosa aDevice Tracker")
+                .setMessage("Jika salin otomatis gagal, tekan lama teks laporan lalu pilih Salin.")
+                .setView(reportView)
+                .setPositiveButton("Salin", (dialog, which) -> {
+                    try {
+                        ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                        clipboard.setPrimaryClip(ClipData.newPlainText("aDevice Tracker diagnostics", report));
+                        Toast.makeText(this, "Laporan disalin. Tempelkan di ChatGPT.", Toast.LENGTH_LONG).show();
+                    } catch (Exception e) {
+                        Toast.makeText(this, "Salin otomatis gagal. Tekan lama teks laporan.", Toast.LENGTH_LONG).show();
+                    }
+                })
+                .setNegativeButton("Tutup", null)
+                .show();
         });
         setContentView(root);
         udid = getIntent().getStringExtra("udid");
