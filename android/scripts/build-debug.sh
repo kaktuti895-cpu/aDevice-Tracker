@@ -18,7 +18,7 @@ mkdir -p "$OUT/generated" "$OUT/classes" "$OUT/dex"
 rm -f "$OUT/resources/compiled.zip" "$OUT/apk/"*.apk
 "$BT/aapt2" compile --dir "$ROOT/res" -o "$OUT/resources/compiled.zip"
 "$BT/aapt2" link -I "$JAR" --manifest "$ROOT/AndroidManifest.xml" --java "$OUT/generated" --min-sdk-version 23 --target-sdk-version 35 --version-code 1 --version-name 0.1.0 -R "$OUT/resources/compiled.zip" -o "$OUT/apk/app-unsigned.apk"
-javac -source 8 -target 8 -classpath "$JAR" -d "$OUT/classes" "$ROOT/src/com/astuti/adevicetracker/MainActivity.java"
+javac -source 8 -target 8 -classpath "$JAR" -d "$OUT/classes" $(find "$ROOT/src" -name '*.java' -print)
 "$BT/d8" --min-api 23 --lib "$JAR" --output "$OUT/dex" $(find "$OUT/classes" -name "*.class" -print)
 cp "$OUT/apk/app-unsigned.apk" "$OUT/apk/app-unsigned-with-dex.apk"
 (cd "$OUT/dex" && jar uf "$OUT/apk/app-unsigned-with-dex.apk" classes.dex)
