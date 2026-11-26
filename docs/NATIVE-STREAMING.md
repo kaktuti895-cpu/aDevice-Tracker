@@ -64,4 +64,4 @@ Koneksi saat ini memakai `ws://` dan tidak memiliki autentikasi pada konfigurasi
 
 Parser metadata `scrcpy_initial` sekarang membaca ukuran dasar dari record `DisplayInfo` (24 byte) dan memakai ukuran `ScreenInfo.videoSize` (25 byte) sebagai prioritas ketika tersedia. Sebelumnya parser hanya mengisi dimensi dari `ScreenInfo`; ketika blok tersebut kosong, aplikasi menghasilkan error `ukuran layar tidak valid` walaupun ukuran display tersedia. Parser baru juga memeriksa jumlah display, panjang blok, dan batas buffer sebelum membaca data.
 
-APK hasil build perbaikan: `aDevice-Tracker-debug.apk`, SHA-256 `a4bed9c02869b7c23a7e5f13232092199696197c1c7ba13ffedd75413e5e2213`. Perbaikan parser sudah dikompilasi dan ditandatangani; tampilan video dan kontrol sentuh tetap menunggu uji langsung pada ponsel.
+APK hasil build perbaikan: `aDevice-Tracker-debug.apk`, SHA-256 `05f23e888a5304fc1cd905d60c0a6a0ec26cf68ac5f95342c58af574ed384284`. Perbaikan parser sudah dikompilasi dan ditandatangani; tampilan video dan kontrol sentuh tetap menunggu uji langsung pada ponsel.
