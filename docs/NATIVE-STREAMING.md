@@ -74,3 +74,12 @@ Overlay status kini menampilkan jumlah byte/pesan video yang diterima serta hitu
 
 - Versi: 0.2.3 (versionCode 5)
 - SHA-256: `8f1146c825fcbeaaca585eb83f3e2414282e09da3f4ed2d18c055b4892be8a96`
+
+## Permintaan aliran video (build 0.2.4)
+
+Tinjauan hasil uji 0.2.3 menunjukkan metadata resolusi diterima, tetapi tidak ada pesan video yang terlihat pada overlay. Audit alur klien web ws-scrcpy menemukan bahwa klien web mengirim `TYPE_CHANGE_STREAM_PARAMETERS` (101) setelah metadata awal diterima. Native client sebelumnya belum mengirim perintah ini, sehingga server dapat menunggu parameter video sebelum mengalirkan frame.
+
+Build 0.2.4 menambahkan pesan kontrol biner type 101 dengan format `VideoSettings` yang sama dengan default `WebCodecsPlayer`: bitrate 524288, 24 FPS, interval keyframe 5, bounds 480×480, displayId 0, tanpa crop/codec options/encoder override. Pesan dikirim sebagai WebSocket binary frame yang dimasking sesuai aturan klien.
+
+- Versi: 0.2.4 (versionCode 6)
+- Status: build dan tanda tangan APK diverifikasi; perlu uji nyata untuk memastikan server mulai mengirim H.264 dan decoder menampilkan gambar.
