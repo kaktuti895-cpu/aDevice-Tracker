@@ -146,20 +146,18 @@ public class MainActivity extends Activity {
         String address="";
         JSONArray interfaces=device.optJSONArray("interfaces");
         if(interfaces!=null){ for(int i=0;i<interfaces.length();i++){ JSONObject item=interfaces.optJSONObject(i); if(item!=null){ String ip=item.optString("ipv4","").trim(); if(!ip.isEmpty() && !"0.0.0.0".equals(ip)){ address=ip; break; } } } }
-        Uri.Builder builder;
-        if(!address.isEmpty()) {
-            builder=new Uri.Builder().scheme("ws").encodedAuthority(address+":8886").path("/");
-        } else {
-            String host=hostInput.getText().toString().trim(); String port=portInput.getText().toString().trim();
-            if(host.isEmpty() || port.isEmpty()){ Toast.makeText(this,"Alamat server belum diisi",Toast.LENGTH_SHORT).show(); return; }
-            builder=new Uri.Builder().scheme("ws").encodedAuthority(host+":"+port).path("/")
-                .appendQueryParameter("action","proxy-adb")
-                .appendQueryParameter("remote","tcp:8886");
-        }
-        builder.appendQueryParameter("udid",udid);
+        String host=hostInput.getText().toString().trim(); String port=portInput.getText().toString().trim();
+        if(host.isEmpty() || port.isEmpty()){ Toast.makeText(this,"Alamat server Debian belum diisi",Toast.LENGTH_SHORT).show(); return; }
+        Uri.Builder proxyBuilder=new Uri.Builder().scheme("ws").encodedAuthority(host+":"+port).path("/")
+            .appendQueryParameter("action","proxy-adb")
+            .appendQueryParameter("remote","tcp:8886")
+            .appendQueryParameter("udid",udid);
+        Uri.Builder directBuilder=new Uri.Builder().scheme("ws").encodedAuthority((address.isEmpty()?host:address)+":"+(address.isEmpty()?port:"8886")).path("/")
+            .appendQueryParameter("udid",udid);
         Intent intent=new Intent(this,StreamActivity.class);
         intent.putExtra("udid",udid);
-        intent.putExtra("ws_url",builder.build().toString());
+        intent.putExtra("ws_url",address.isEmpty()?proxyBuilder.build().toString():directBuilder.build().toString());
+        intent.putExtra("fallback_ws_url",proxyBuilder.build().toString());
         startActivity(intent);
     }
 
