@@ -7,7 +7,7 @@
 - Menambahkan pengiriman pesan biner `TYPE_TOUCH` untuk down, move, dan up.
 - Menambahkan tombol pembuka stream pada kartu perangkat aktif.
 - Memperbarui script build agar mengompilasi seluruh file Java.
-- APK debug versi 0.2.0 berhasil dibangun dan signature diverifikasi. SHA-256: `ec588244dbfee8dccd89fc57c9925d8bd308c203dcd3bdd03ac8797a5f2bdb3a`.
+- APK debug versi 0.2.0 berhasil dibangun dan signature diverifikasi. SHA-256: `076fb98187aef13d461df3751b48630b0bddc2a7bd3aab70064840dfce8f3637`.
 - Uji stream, gambar bergerak, dan kontrol sentuh pada perangkat fisik masih tertunda.
 
 ## 0.1.0 - Fondasi awal
