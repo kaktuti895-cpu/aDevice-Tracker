@@ -1,45 +1,90 @@
-# Tutorial Build dan Instalasi
+# Tutorial build dan instalasi
 
-## Prasyarat
+Panduan membangun APK debug dari source Java pada Debian.
+
+## 1. Persyaratan
 - Debian/Linux.
-- JDK yang sesuai konfigurasi proyek.
-- Android SDK, platform-tools, dan build-tools.
-- Perangkat Android untuk pengujian.
+- OpenJDK dengan `javac` dan `keytool`.
+- Android SDK Platform 35.
+- Android Build Tools 35.0.0.
+- Lokasi SDK pada server proyek: `/opt/android-sdk`.
 
-## Periksa lingkungan
+Periksa toolchain:
+
 ```bash
 java -version
-adb version
-adb devices -l
+javac -version
+test -f /opt/android-sdk/platforms/android-35/android.jar
+test -x /opt/android-sdk/build-tools/35.0.0/aapt2
+test -x /opt/android-sdk/build-tools/35.0.0/d8
+test -x /opt/android-sdk/build-tools/35.0.0/zipalign
+test -x /opt/android-sdk/build-tools/35.0.0/apksigner
 ```
 
-Pastikan perangkat pengujian berstatus `device`, bukan `unauthorized`.
+Jika SDK berada di lokasi lain:
 
-## Build debug
-Dari root proyek:
 ```bash
+export ANDROID_SDK_ROOT=/lokasi/android-sdk
+```
+
+## 2. Ambil source
+
+```bash
+git clone https://github.com/kaktuti895-cpu/aDevice-Tracker.git
+cd aDevice-Tracker/android
+```
+
+## 3. Build
+
+```bash
+chmod +x scripts/build-debug.sh
 ./scripts/build-debug.sh
 ```
 
-Periksa APK:
-```bash
-ls -lh build/apk/aDevice-Tracker-debug.apk
-sha256sum build/apk/aDevice-Tracker-debug.apk
-apksigner verify --verbose build/apk/aDevice-Tracker-debug.apk
+Script menjalankan aapt2, javac untuk semua file Java, d8, zipalign, dan apksigner. Hasil:
+
+```text
+build/apk/aDevice-Tracker-debug.apk
 ```
 
-## Instalasi
+## 4. Verifikasi
+
 ```bash
+/opt/android-sdk/build-tools/35.0.0/apksigner verify --verbose build/apk/aDevice-Tracker-debug.apk
+/opt/android-sdk/build-tools/35.0.0/aapt dump badging build/apk/aDevice-Tracker-debug.apk | head -20
+sha256sum build/apk/aDevice-Tracker-debug.apk
+```
+
+Metadata:
+- Package: `com.astuti.adevicetracker`
+- Label: aDevice Tracker
+- Minimum SDK: 23
+- Target SDK: 35
+- Launcher activity: `com.astuti.adevicetracker.MainActivity`
+
+## 5. Instalasi opsional melalui ADB
+
+```bash
+adb devices
 adb install -r build/apk/aDevice-Tracker-debug.apk
 ```
 
-Jika Android menolak instalasi, periksa prompt keamanan pada perangkat. Jangan menonaktifkan perlindungan sistem secara global.
+Tutorial ini tidak menjalankan `adb forward`, tidak menghentikan scrcpy, dan tidak me-restart ws-scrcpy. APK juga dapat disalin ke ponsel dan dipasang manual.
 
-## Pengujian dasar
-1. Buka aplikasi dari launcher.
-2. Masukkan host dan port backend.
-3. Hubungkan ke backend.
-4. Pastikan daftar perangkat muncul.
-5. Catat log sebelum menguji streaming.
+## 6. Jalankan
+1. Buka aDevice Tracker dari launcher Android.
+2. Masukkan IP Debian dan port 8000.
+3. Tekan Hubungkan.
+4. Pilih tombol **Lihat layar & kontrol** pada perangkat aktif.
 
-Build APK harus terpisah dari pemeliharaan layanan server. Jangan restart/kill ws-scrcpy, ADB, scrcpy, atau port-forward sebagai bagian dari build aplikasi.
+Web UI browser tetap tersedia di `http://IP-DEBIAN:8000/`.
+
+## 7. Troubleshooting
+- Gagal terhubung ke tracker: periksa jaringan, IP, port 8000, dan akses Web UI dari browser.
+- Daftar kosong: periksa apakah tracker Debian mendeteksi perangkat.
+- Stream gagal: periksa status perangkat, interface IPv4, dan apakah scrcpy server pada perangkat tersedia di port 8886.
+- Gambar tidak tampil: implementasi decoder masih dalam tahap uji perangkat nyata; catat model Android, versi OS, dan pesan status aplikasi.
+- Jangan restart layanan atau mengubah port-forward hanya untuk mengatasi masalah aplikasi.
+
+## Signing
+Script memakai debug keystore lokal pada `~/.android/debug.keystore`. Jangan unggah keystore atau password ke repository. APK debug dengan key berbeda tidak selalu dapat dipasang sebagai update di atas APK yang ditandatangani key lain.
