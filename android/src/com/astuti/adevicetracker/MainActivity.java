@@ -143,9 +143,23 @@ public class MainActivity extends Activity {
     private void openStream(JSONObject device) {
         String udid=device.optString("udid","");
         if(udid.isEmpty()){ Toast.makeText(this,"Serial perangkat tidak tersedia",Toast.LENGTH_SHORT).show(); return; }
-        String address="";
+        String address=""; String backupAddress="";
+        String preferredInterface=device.optString("wifi.interface","");
         JSONArray interfaces=device.optJSONArray("interfaces");
-        if(interfaces!=null){ for(int i=0;i<interfaces.length();i++){ JSONObject item=interfaces.optJSONObject(i); if(item!=null){ String ip=item.optString("ipv4","").trim(); if(!ip.isEmpty() && !"0.0.0.0".equals(ip)){ address=ip; break; } } } }
+        if(interfaces!=null){
+            for(int i=0;i<interfaces.length();i++){
+                JSONObject item=interfaces.optJSONObject(i);
+                if(item!=null){
+                    String ip=item.optString("ipv4","").trim();
+                    String name=item.optString("name","").trim();
+                    if(ip.isEmpty() || "0.0.0.0".equals(ip) || "127.0.0.1".equals(ip)) continue;
+                    if(!preferredInterface.isEmpty() && preferredInterface.equals(name)){ address=ip; break; }
+                    if(name.startsWith("wlan") || name.startsWith("wifi") || name.startsWith("eth")){ if(backupAddress.isEmpty()) backupAddress=ip; }
+                    else if(backupAddress.isEmpty() && !name.startsWith("ccmni")) backupAddress=ip;
+                }
+            }
+        }
+        if(address.isEmpty()) address=backupAddress;
         String host=hostInput.getText().toString().trim(); String port=portInput.getText().toString().trim();
         if(host.isEmpty() || port.isEmpty()){ Toast.makeText(this,"Alamat server Debian belum diisi",Toast.LENGTH_SHORT).show(); return; }
         Uri.Builder proxyBuilder=new Uri.Builder().scheme("ws").encodedAuthority(host+":"+port).path("/")
