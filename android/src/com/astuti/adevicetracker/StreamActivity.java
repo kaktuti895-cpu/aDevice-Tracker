@@ -445,7 +445,7 @@ public class StreamActivity extends Activity implements android.view.SurfaceHold
         synchronized void sendVideoSettings() throws Exception {
             // Match ws-scrcpy WebCodecsPlayer defaults: 512 KiB/s, 24 FPS,
             // 5-second keyframe interval, 480x480 bounds, display 0.
-            ByteBuffer b = ByteBuffer.allocate(36).order(ByteOrder.BIG_ENDIAN);
+            ByteBuffer b = ByteBuffer.allocate(35).order(ByteOrder.BIG_ENDIAN);
             b.put((byte)101);             // TYPE_CHANGE_STREAM_PARAMETERS
             b.putInt(524288);             // bitrate
             b.putInt(24);                 // max FPS
