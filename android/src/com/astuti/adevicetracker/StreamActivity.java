@@ -54,6 +54,11 @@ public class StreamActivity extends Activity implements android.view.SurfaceHold
     private long videoPackets = 0;
     private long decodedFrames = 0;
     private long droppedPackets = 0;
+    private long receivedVideoBytes = 0;
+    private long videoMessages = 0;
+    private long spsCount = 0;
+    private long ppsCount = 0;
+    private long idrCount = 0;
     private String udid = "";
 
     @Override protected void onCreate(Bundle state) {
@@ -125,7 +130,12 @@ public class StreamActivity extends Activity implements android.view.SurfaceHold
                 } else if (isDeviceMessage(frame)) {
                     // Clipboard and file-push responses are not H.264 video packets.
                 } else if (videoWidth > 0 && frame.length > 0) {
+                    receivedVideoBytes += frame.length;
+                    videoMessages++;
                     appendH264(frame);
+                    if (videoMessages == 1 || videoMessages % 20 == 0) {
+                        setStatus(streamDiagnostics("Menerima video"));
+                    }
                 }
             }
             if (running.get()) setStatus("Stream terputus.");
@@ -135,6 +145,13 @@ public class StreamActivity extends Activity implements android.view.SurfaceHold
             running.set(false);
             releaseDecoder();
         }
+    }
+
+    private String streamDiagnostics(String prefix) {
+        return prefix + " · " + videoWidth + "×" + videoHeight +
+            "\n" + (receivedVideoBytes / 1024) + " KB · " + videoMessages + " pesan" +
+            "\nSPS " + spsCount + " · PPS " + ppsCount + " · IDR " + idrCount +
+            "\nFrame decode " + decodedFrames + " · paket dilewati " + droppedPackets;
     }
 
     private static boolean isInitialInfo(byte[] data) {
@@ -245,13 +262,13 @@ public class StreamActivity extends Activity implements android.view.SurfaceHold
         int prefix = startCodeLength(nalu, 0);
         if (prefix == 0 || nalu.length <= prefix) return;
         int type = nalu[prefix] & 0x1f;
-        if (type == 7) { sps = nalu; Log.i("aDeviceStream", "SPS received bytes=" + nalu.length); configureDecoderIfReady(); return; }
-        if (type == 8) { pps = nalu; Log.i("aDeviceStream", "PPS received bytes=" + nalu.length); configureDecoderIfReady(); return; }
+        if (type == 7) { sps = nalu; spsCount++; Log.i("aDeviceStream", "SPS received bytes=" + nalu.length); configureDecoderIfReady(); return; }
+        if (type == 8) { pps = nalu; ppsCount++; Log.i("aDeviceStream", "PPS received bytes=" + nalu.length); configureDecoderIfReady(); return; }
         // MediaCodec consumes coded picture data, not standalone SEI/AUD/filler NAL units.
         if (type != 1 && type != 5) return;
         if (decoder == null) { droppedPackets++; return; }
         videoPackets++;
-        if (type == 5) Log.i("aDeviceStream", "IDR received bytes=" + nalu.length);
+        if (type == 5) { idrCount++; Log.i("aDeviceStream", "IDR received bytes=" + nalu.length); }
         decodeNalu(nalu, type == 5);
     }
 
@@ -377,19 +394,51 @@ public class StreamActivity extends Activity implements android.view.SurfaceHold
         }
 
         byte[] readFrame() throws Exception {
-            int first = in.read(); if (first < 0) return null;
-            int second = in.read(); if (second < 0) return null;
-            int opcode = first & 15; boolean masked = (second & 128) != 0;
-            long length = second & 127;
-            if (length == 126) length = ((long)readByte() << 8) | readByte();
-            else if (length == 127) { length = 0; for (int i=0;i<8;i++) length = (length << 8) | readByte(); }
-            if (length > 8 * 1024 * 1024) throw new Exception("paket stream terlalu besar");
-            byte[] mask = masked ? readBytes(4) : null;
-            byte[] payload = readBytes((int)length);
-            if (masked) for (int i=0;i<payload.length;i++) payload[i] ^= mask[i%4];
-            if (opcode == 8) return null;
-            if (opcode == 9) { sendFrame(10, payload); return new byte[0]; }
-            return opcode == 2 ? payload : new byte[0];
+            ByteArrayOutputStream message = null;
+            int messageOpcode = -1;
+            while (true) {
+                int first = in.read();
+                if (first < 0) return null;
+                int second = in.read();
+                if (second < 0) throw new Exception("header WebSocket terpotong");
+                boolean fin = (first & 0x80) != 0;
+                int opcode = first & 15;
+                boolean masked = (second & 0x80) != 0;
+                long length = second & 127;
+                if (length == 126) length = ((long)readByte() << 8) | readByte();
+                else if (length == 127) {
+                    length = 0;
+                    for (int i = 0; i < 8; i++) {
+                        int value = readByte();
+                        if (i == 0 && (value & 0x80) != 0) throw new Exception("panjang frame WebSocket tidak valid");
+                        length = (length << 8) | value;
+                    }
+                }
+                boolean control = (opcode & 8) != 0;
+                if (length > 8L * 1024 * 1024 || (control && (!fin || length > 125)))
+                    throw new Exception("ukuran frame WebSocket tidak valid: " + length);
+                byte[] mask = masked ? readBytes(4) : null;
+                byte[] payload = readBytes((int)length);
+                if (masked) for (int i = 0; i < payload.length; i++) payload[i] ^= mask[i % 4];
+
+                if (opcode == 8) return null;
+                if (opcode == 9) { sendFrame(10, payload); continue; }
+                if (opcode == 10) continue;
+                if (opcode == 0) {
+                    if (message == null) throw new Exception("continuation WebSocket tanpa pesan awal");
+                    if (message.size() + payload.length > 16 * 1024 * 1024)
+                        throw new Exception("pesan WebSocket terfragmentasi terlalu besar");
+                    message.write(payload);
+                    if (fin) return messageOpcode == 2 ? message.toByteArray() : new byte[0];
+                    continue;
+                }
+                if (opcode != 1 && opcode != 2) throw new Exception("opcode WebSocket tidak didukung: " + opcode);
+                if (message != null) throw new Exception("pesan WebSocket baru sebelum fragment selesai");
+                if (fin) return opcode == 2 ? payload : new byte[0];
+                messageOpcode = opcode;
+                message = new ByteArrayOutputStream();
+                message.write(payload);
+            }
         }
 
         synchronized void sendTouch(int action, int x, int y, int width, int height, int pressure) {
