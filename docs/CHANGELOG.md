@@ -1,13 +1,13 @@
 # Riwayat Pengembangan
 
-## 2026-11-26 - Native streaming prototype
+## 0.2.0 - Native streaming prototype (2026-11-26)
 - Audit protokol streaming ws-scrcpy selesai pada sisi metadata awal, frame H.264, dan format kontrol sentuh.
 - Menambahkan `StreamActivity` native berbasis `SurfaceView` dan `MediaCodec`.
 - Menambahkan parser metadata `scrcpy_initial` dan pemisahan NAL H.264 Annex-B.
 - Menambahkan pengiriman pesan biner `TYPE_TOUCH` untuk down, move, dan up.
 - Menambahkan tombol pembuka stream pada kartu perangkat aktif.
 - Memperbarui script build agar mengompilasi seluruh file Java.
-- APK debug berhasil dibangun dan signature diverifikasi.
+- APK debug versi 0.2.0 berhasil dibangun dan signature diverifikasi. SHA-256: `ec588244dbfee8dccd89fc57c9925d8bd308c203dcd3bdd03ac8797a5f2bdb3a`.
 - Uji stream, gambar bergerak, dan kontrol sentuh pada perangkat fisik masih tertunda.
 
 ## 0.1.0 - Fondasi awal
